@@ -205,6 +205,39 @@ mrb_lcd_set_text_color(mrb_state *mrb, mrb_value self)
   return mrb_nil_value();
 }
 
+mrb_value mrb_f_sprintf(mrb_state *mrb, mrb_value obj); /* in sprintf.c */
+
+static mrb_value
+mrb_lcd_printf(mrb_state *mrb, mrb_value self)
+{
+  mrb_value str;
+  char *cstr;
+  str = mrb_f_sprintf(mrb, self);
+  cstr = mrb_str_to_cstr(mrb, str);
+  M5.Lcd.print(cstr);
+  return self;
+}
+
+static mrb_value
+mrb_lcd_print(mrb_state *mrb, mrb_value self)
+{
+  mrb_value *argv;
+  mrb_int len;
+  mrb_value str;
+  char *cstr;
+
+  mrb_get_args(mrb, "*", &argv, &len);
+  if (len <= 0) {
+    mrb_raise(mrb, E_ARGUMENT_ERROR, "wrong nuber of arguments");
+  }
+  for (int i = 0; i < len; i++) {
+    str = mrb_str_to_str(mrb, argv[i]);
+    cstr = mrb_str_to_cstr(mrb, str);
+    M5.Lcd.print(cstr);
+  }
+  return self;
+}
+
 
 ///
 
@@ -349,7 +382,11 @@ mrb_mruby_lcd_m5stack_gem_init(mrb_state *mrb)
   mrb_define_class_method(mrb, lcd, "set_text_wrap", mrb_lcd_set_text_wrap, MRB_ARGS_REQ(2));
 
   // M5.Lcd.printf();
+  mrb_define_class_method(mrb, lcd, "printf", mrb_lcd_printf, MRB_ARGS_ANY());
+
   // M5.Lcd.print();
+  mrb_define_class_method(mrb, lcd, "print", mrb_lcd_print, MRB_ARGS_ANY());
+
   // M5.Lcd.println();
 
   // M5.Lcd.drawCentreString(const char *string, int dX, int poY, int font);
