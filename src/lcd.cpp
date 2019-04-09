@@ -257,26 +257,6 @@ mrb_lcd_cy(mrb_state *mrb, mrb_value self)
 //   return self;
 // }
 
-/// Button
-
-static mrb_value
-mrb_btn_is_pressed(mrb_state *mrb, mrb_value self)
-{
-  uint8_t b;
-  M5.update();
-  b = M5.BtnA.isPressed();
-  return mrb_bool_value(b != 0);
-}
-
-static mrb_value
-mrb_btn_is_released(mrb_state *mrb, mrb_value self)
-{
-  uint8_t b;
-  M5.update();
-  b = M5.BtnA.isReleased();
-  return mrb_bool_value(b != 0);
-}
-
 void
 mrb_mruby_lcd_m5stack_gem_init(mrb_state *mrb)
 {
@@ -369,11 +349,6 @@ mrb_mruby_lcd_m5stack_gem_init(mrb_state *mrb)
   mrb_define_class_method(mrb, lcd, "cx", mrb_lcd_cx, MRB_ARGS_NONE());
   mrb_define_class_method(mrb, lcd, "cy", mrb_lcd_cy, MRB_ARGS_NONE());
 ///
-
-  // TODO: move to Button class
-  struct RClass *btn = mrb_define_class(mrb, "Button", mrb->object_class);
-  mrb_define_class_method(mrb, btn, "pressed?", mrb_btn_is_pressed, MRB_ARGS_NONE());
-  mrb_define_class_method(mrb, btn, "released?", mrb_btn_is_released, MRB_ARGS_NONE());
 }
 
 void
