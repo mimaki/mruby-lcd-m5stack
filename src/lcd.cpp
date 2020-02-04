@@ -3,6 +3,7 @@
 #include "mruby.h"
 #include "mruby/class.h"
 #include "mruby/string.h"
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -205,6 +206,52 @@ mrb_lcd_set_text_color(mrb_state *mrb, mrb_value self)
   return mrb_nil_value();
 }
 
+static mrb_value
+mrb_lcd_qrcode(mrb_state *mrb, mrb_value self)
+{
+  char *s;
+  size_t len;
+  mrb_int x=-1, y=-1, w=0, ver=0;
+  mrb_int wx, hx;
+  mrb_int cells, mul;
+
+  mrb_get_args(mrb, "z|iiii", &s, &x, &y, &w, &ver);
+  len = strlen(s);
+  wx = (x < 0) ? 320 : 320 - x;
+  hx = (y < 0) ? 240 : 240 - y;
+  if (wx > hx) wx = hx;
+  wx -= 2;
+
+  switch (ver) {
+    case 2:   // ..32B
+    case 5:   // ..106B
+    case 15:  // ..520B
+      break;
+    default:  //
+    case 0:   // auto
+      ver = (len <= 32)  ? 2 :
+            (len <= 106) ? 5 : 15;
+      break;
+  }
+
+  if (w == 0) {
+    // ver  2: 25 cells
+    // ver  5: 37 cells
+    // ver 15: 77 cells
+    cells = (ver == 2) ? 25 :
+            (ver == 5) ? 37 : 77;
+    mul = wx / cells;
+
+    w = cells * mul + 2;
+  }
+
+  if (y < 0) y = (240 - w) / 2;
+  if (x < 0) x = (320 - w) / 2;
+
+  M5.Lcd.qrcode((const char*)s, (uint16_t)x, (uint16_t)y, (uint8_t)w, (uint8_t)ver);
+  return mrb_nil_value();
+}
+
 
 ///
 
@@ -342,6 +389,9 @@ mrb_mruby_lcd_m5stack_gem_init(mrb_state *mrb)
   // M5.Lcd.drawJpgFile(fs::FS &fs, const char *path, uint16_t x, uint16_t y);
 
   // M5.Lcd.drawBmpFile(fs::FS &fs, const char *path, uint16_t x, uint16_t y);
+
+  // M5.Lcd.qrcode(const char *string, uint16_t x, uint16_t y, uint8_t width, uint8_t version);
+  mrb_define_class_method(mrb, lcd, "qrcode", mrb_lcd_qrcode, MRB_ARGS_ARG(1, 4));
 
 ///
   mrb_define_class_method(mrb, lcd, "rotate", mrb_lcd_rotate, MRB_ARGS_REQ(1));
